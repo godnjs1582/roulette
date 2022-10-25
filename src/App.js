@@ -6,11 +6,11 @@ import styled, { css, keyframes } from "styled-components";
 ChartJS.register(ArcElement);
 
 export const data = {
-  labels: ['빨강', '주황', '초록', '노랑', "파랑"],
+  labels: ['빨강', '주황', '초록', '노랑', '파랑'],
   datasets: [
     {
       label: '# of Votes',
-      data: [20,20,20,20,20],
+      data: [3,13,5,19,10],
       backgroundColor: [
         'red',
         'orange',
@@ -50,20 +50,19 @@ export default function App() {
    
   }
   const getWinner = (deg,initialAmount) => {
-    // console.log("deg:",deg)
     let amount=initialAmount
     for (let i = 1; i < items.length+1; i++) {
-      const length=items.length
       if (amount / sum < deg / 360) {
         amount = amount + items[i]
       } else {
         console.log(amount, i)
-        
-        setWinner(data.labels[length-i])
+        setWinner(data.labels[i-1])
         return
       }
     }
   }
+
+  console.log("deg:",deg, "winner",winner)
 
   useEffect(() => {
     if (isRotating) {
@@ -84,6 +83,10 @@ export default function App() {
       setDeg(prev => prev + 1)
     }
   }, [count])
+
+  useEffect(()=>{
+
+  },[deg])
 
   return (
     <div style={{width:"1200px", margin:"0 auto"}}>
@@ -111,7 +114,7 @@ const rotationEnd = (deg) => keyframes`
   transform: rotate(0deg);
 }
 100%{
-  transform: rotate(${deg % 360}deg);
+  transform: rotate(${360-deg}deg);
 }
 `
 
@@ -121,6 +124,6 @@ margin:0 auto;
 width:50%;
 height:50%;
 animation:${(props) => props.isRotating ? css`${rotationStart(props.deg)} 0.2s linear infinite` : css`${rotationEnd(props.deg)} 1s linear`};
-transform:${(props) => props.deg !== 0 ? `rotate(${props.deg}deg)` : ""}
+transform:${(props) => props.deg !== 0 ? `rotate(${360-props.deg}deg)` : ""}
 `
 
