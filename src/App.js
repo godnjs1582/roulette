@@ -6,25 +6,24 @@ import styled, { css, keyframes } from "styled-components";
 ChartJS.register(ArcElement);
 
 export const data = {
-  labels: ['딸기', '당근', '수박', '참외', '메론'],
+  labels: ['빨강', '주황', '초록', '노랑', "파랑"],
   datasets: [
     {
       label: '# of Votes',
-      data: [12, 19, 3, 5, 2],
+      data: [20,20,20,20,20],
       backgroundColor: [
         'red',
         'orange',
         'green',
         'yellow',
-        '#bfff00',
+        'blue',
       ],
       borderColor: [
         'red',
         'orange',
         'green',
         'yellow',
-        '#bfff00',
-
+        'blue',
       ],
       borderWidth: 1,
     },
@@ -32,59 +31,44 @@ export const data = {
 };
 
 
-
-
-
 export default function App() {
-
-
-
-
+  const initialAmount =data.datasets[0].data[0] 
   const [isRotating, setIsRotating] = useState(false)
-  const ref = useRef();
   const [count, setCount] = useState(0)
   const [deg, setDeg] = useState(0);
-
-
-
   const items = data.datasets[0].data
   const sum = items.reduce((a, b) => a + b, 0)
-
-
   const [winner, setWinner] = useState("")
 
   const handleSpinClick = () => {
     setIsRotating((prev) => !prev)
     if(isRotating){
-      getWinner(deg);
+      getWinner(deg,initialAmount);
     }else{
       setWinner("")
     }
    
   }
-  const getWinner = (deg) => {
-    console.log(deg,"deg")
-    for (let i = 1; i < items.length; i++) {
-      let amount = items[i];
+  const getWinner = (deg,initialAmount) => {
+    // console.log("deg:",deg)
+    let amount=initialAmount
+    for (let i = 1; i < items.length+1; i++) {
+      const length=items.length
       if (amount / sum < deg / 360) {
         amount = amount + items[i]
-
-        console.log("실행2222")
-        return
       } else {
-        console.log("실행")
-        setWinner(data.labels[i])
+        console.log(amount, i)
+        
+        setWinner(data.labels[length-i])
         return
       }
     }
   }
- console.log(winner,"winner")
 
   useEffect(() => {
     if (isRotating) {
       const timer = setInterval(() => {
         setCount(prev => prev + 1);
-
       }, 10);
       return () => clearInterval(timer);
     } else {
@@ -101,24 +85,16 @@ export default function App() {
     }
   }, [count])
 
-
-
-
-
   return (
-    <>
+    <div style={{width:"1200px", margin:"0 auto"}}>
+    <h1 style={{textAlign:"center"}}>여기가 Winner</h1>
+    <h1 style={{textAlign:"center"}}>↓</h1>
       <Wrapper isRotating={isRotating} deg={deg}>
         <Pie data={data} legend={false} />
       </Wrapper>
-
       <button onClick={handleSpinClick}>클릭</button>
-      <div>{winner}</div>
-    </>
-
-
-
-
-
+      <h1>Winner is: {winner}</h1>
+    </div>
 
   );
 }
@@ -140,7 +116,10 @@ const rotationEnd = (deg) => keyframes`
 `
 
 const Wrapper = styled.div`
-// border:1px solid red;
+margin-top:100px;
+margin:0 auto;
+width:50%;
+height:50%;
 animation:${(props) => props.isRotating ? css`${rotationStart(props.deg)} 0.2s linear infinite` : css`${rotationEnd(props.deg)} 1s linear`};
 transform:${(props) => props.deg !== 0 ? `rotate(${props.deg}deg)` : ""}
 `
