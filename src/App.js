@@ -6,26 +6,26 @@ import styled, { css, keyframes } from "styled-components";
 ChartJS.register(ArcElement);
 
 export const data = {
-  labels: ['빨강', '주황', '초록', '노랑', '파랑'],
+  labels: ['빨강', '주황', '노랑', '초록', '파랑'],
   datasets: [
     {
       label: '# of Votes',
-      data: [3,13,5,19,10],
+      data: [1,1,1,1,1],
       backgroundColor: [
         'red',
         'orange',
-        'green',
         'yellow',
+        'green',
         'blue',
       ],
       borderColor: [
-        'red',
-        'orange',
-        'green',
-        'yellow',
-        'blue',
+        'white',
+        'white',
+        'white',
+        'white',
+        'white',
       ],
-      borderWidth: 1,
+      borderWidth: 0,
     },
   ],
 };
@@ -33,60 +33,77 @@ export const data = {
 
 export default function App() {
   const initialAmount =data.datasets[0].data[0] 
-  const [isRotating, setIsRotating] = useState(false)
+  const [isRotating, setIsRotating] = useState("unstarted")
   const [count, setCount] = useState(0)
-  const [deg, setDeg] = useState(0);
+  const deg = count%360
   const items = data.datasets[0].data
   const sum = items.reduce((a, b) => a + b, 0)
   const [winner, setWinner] = useState("")
 
   const handleSpinClick = () => {
-    setIsRotating((prev) => !prev)
-    if(isRotating){
-      getWinner(deg,initialAmount);
-    }else{
-      setWinner("")
+    if(isRotating==="unstarted"||isRotating==="stopped"){
+      setIsRotating("started")
+    }else if(isRotating==="started"){
+      setIsRotating("stopped")
     }
-   
+    // setIsRotating((prev) => !prev)
+    if(isRotating==="stopped"){
+      getWinner(deg,initialAmount);
+    }
+    // else{
+    //   setWinner("")
+    // } 
   }
+
   const getWinner = (deg,initialAmount) => {
     let amount=initialAmount
     for (let i = 1; i < items.length+1; i++) {
       if (amount / sum < deg / 360) {
         amount = amount + items[i]
       } else {
-        console.log(amount, i)
         setWinner(data.labels[i-1])
         return
       }
     }
   }
+  console.log(isRotating)
 
   console.log("deg:",deg, "winner",winner)
 
   useEffect(() => {
-    if (isRotating) {
+    if(isRotating==="unstarted") return
+    if (isRotating==="started") {
       const timer = setInterval(() => {
-        setCount(prev => prev + 1);
+        setCount((prev) => prev + 1);
       }, 10);
       return () => clearInterval(timer);
-    } else {
-      setCount(0)
+    } else if(isRotating==="stopped"){
+      console.log("실행되나요")
+      while (count<100) {
+        console.log("실행되나요22");
+        const timer2 = setInterval(() => {
+         
+          setCount((prev) => prev - 1);
+        }, 10);
+        return () => clearInterval(timer2);
+      }
     }
-
   }, [isRotating]);
 
-  useEffect(() => {
-    if (deg > 360) {
-      setDeg(prev => prev - 360)
-    } else {
-      setDeg(prev => prev + 1)
-    }
-  }, [count])
+  console.log(count,"count",deg,"deg",winner,"winner")
 
-  useEffect(()=>{
+  // useEffect(() => {
+  //   if (deg > 360) {
+  //     setDeg(prev => prev - 360)
+  //   } else {
+  //     setDeg(prev => prev + 1)
+  //   }
+  // }, [count])
 
-  },[deg])
+  console.log(isRotating)
+  const renderWinner = (winner)=>{
+
+  }
 
   return (
     <div style={{width:"1200px", margin:"0 auto"}}>
@@ -110,20 +127,20 @@ const rotationStart = (deg) => keyframes`
 }
 `
 const rotationEnd = (deg) => keyframes`
-0%{
-  transform: rotate(0deg);
-}
-100%{
-  transform: rotate(${360-deg}deg);
-}
+  0%{
+    transform: rotate(0deg);
+  }
+  100%{
+    transform: rotate(${360-deg}deg);
+  }
 `
 
 const Wrapper = styled.div`
-margin-top:100px;
-margin:0 auto;
-width:50%;
-height:50%;
-animation:${(props) => props.isRotating ? css`${rotationStart(props.deg)} 0.2s linear infinite` : css`${rotationEnd(props.deg)} 1s linear`};
-transform:${(props) => props.deg !== 0 ? `rotate(${360-props.deg}deg)` : ""}
+  margin-top:100px;
+  margin:0 auto;
+  width:50%;
+  height:50%;
+  animation:${(props) => props.isRotating==="started" ? css`${rotationStart(props.deg)} 0.2s linear infinite` : deg && css`${rotationEnd(props.deg)} 2s ease-out`};
+  transform:${(props) => props.deg !== 0 ? `rotate(${360-props.deg}deg)` : ""}
 `
 
