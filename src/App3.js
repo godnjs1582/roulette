@@ -6,10 +6,10 @@ import styled, { css, keyframes } from "styled-components";
 import centerImg from "./center.png";
 
 const data = [
-  { name: '빨강', value: 400 },
-  { name: '노랑', value: 300 },
-  { name: '파랑', value: 300 },
-  { name: '초록', value: 200 },
+  { name: '빨강', value: 40 },
+  { name: '노랑', value: 30 },
+  { name: '파랑', value: 20 },
+  { name: '초록', value: 10 },
 ];
 
 
@@ -35,12 +35,17 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 
 
 export default function App() {
-  const refs =useRef([]);
-  const ref = useRef()
+
   const [isRotate, setIsRotate] = useState(false);
-  const [count, setCount] = useState(0);
-  const deg = count % 360;
-  // const [donation, setDonation] = useState([])
+  const [count, setCount]=useState(0)
+  const [deg,setDeg]=useState(Math.ceil(count%360))
+  const items = data.map((item)=>item.name);
+  const sum = data.map((item)=>item.value).reduce((a,b)=>a+b,0);
+  const sections=data.map((item)=>item.value*360/sum)
+  const [winnerPriority,setWinnerPriority]=useState(0)
+
+ 
+  // let deg =Math.ceil(count % 360);
 
   const [winner, setWinner] = useState("");
 
@@ -52,24 +57,56 @@ export default function App() {
     if (isRotate) {
       const timer = setInterval(() => {
         setCount((prev) => prev + 10); // 속도조절
+        // setDeg(count%360)
       }, 10);
       return () => clearInterval(timer);
     }
-  }, [isRotate]);
+    else{
+      const timer = setInterval(() => {
+      setDeg(prev=>Math.sin((prev*Math.PI)/2)*100/360)
+      }, 10);
+      return () => clearInterval(timer);
+    }
+  }, [isRotate,deg]);
+console.log(deg)
+
+function easeInOutQuad(x, t, b, c, d) {
+  if ((t /= d / 2) < 1) {
+      return c / 2 * t * t + b;
+  } else {
+      return -c / 2 * ((--t) * (t - 2) - 1) + b;
+  }
+}
+
+useEffect(()=>{
+
+  setDeg(Math.ceil(count%360))
+
+},[count])
+
+
+
+  
+
+  // console.log(winner)
+
 
   useEffect(() => {
-    const items = data.map((item)=>item.name);
-    const sum = data.map((item)=>item.value).reduce((a,b)=>a+b,0);
+    
 
     const getWinner = () => {
       let amount = 0;
       for (let i = 0; i < items.length; i++) {
         amount = amount + data[i].value; 
         if (amount / sum > deg / 360) {
-          return setWinner(data[i].name);
+          setWinner(data[i].name);
+          setWinnerPriority(data[i].value)
+          return
         }
       }
-      return setWinner(data[items.length-1].name);
+      setWinner(data[items.length-1].name);
+      setWinnerPriority(data[items.length-1].value);
+    
     };
 
     getWinner();
@@ -79,16 +116,6 @@ export default function App() {
     e.preventDefault()
   }
   
-  // useEffect(() => {
-  //   console.log(re);
-
-
-  // }, [refs])
-  // if(ref && ref.current){
-  //   console.log(ref)
-  // }
-console.log("ref:",ref.current)
-
   return (
     <div
       style={{
@@ -104,7 +131,7 @@ console.log("ref:",ref.current)
         ↓
       </Arrow>
       <div style={{ position: "relative" }} >
-        <Wrapper isStop={count && !isRotate} deg={deg}  >
+        <Wrapper isStop={count && !isRotate} deg={deg} sections={sections} >
           {/* <ResponsiveContainer width="100%" height="100%"> */}
           <PieChart
             width={600}
@@ -126,17 +153,17 @@ console.log("ref:",ref.current)
               endAngle={-450}
               
             >
-     
+
               {data.map((entry, index) => {
-                <div>{'헤헤헤헤헤'}</div>
-                       //     <div  key={`cell-${index}`} >
-            //       <Cell
-               
-            //         fill={COLORS[index % COLORS.length]}
-            //       />
-            //  </div>
+
+                <div key={`cell-${index}`} >
+                  <Cell
+
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                </div>
               }
-    
+
               )}
             </Pie>
           </PieChart>
@@ -157,6 +184,8 @@ console.log("ref:",ref.current)
 
 
 const rotationEnd = (deg) => keyframes`
+
+
   100%{
     transform: rotate(${-1080-deg}deg);
   }
@@ -194,11 +223,7 @@ const Wrapper = styled.div`
   margin: 0 auto;
   width: 600px;
   height: 600px;
-  animation: ${({ isStop, deg }) =>
-    isStop &&
-    css`
-      ${rotationEnd(deg)} 2s ease-out
-    `};
+
   transform: ${({ deg }) => `rotate(${-deg}deg)`};
 `;
 
@@ -209,3 +234,9 @@ const Img = styled.img`
   transform: translate(-50%, -50%);
   z-index: 999;
 `;
+
+// animation: ${({ isStop, deg , sections}) =>
+// isStop &&
+// css`
+//   ${rotationEnd(deg, sections)} 5s ease-out
+// `};
