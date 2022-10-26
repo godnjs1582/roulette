@@ -33,7 +33,7 @@ export const data = {
 
 export default function App() {
   const initialAmount =data.datasets[0].data[0] 
-  const [isRotating, setIsRotating] = useState("unstarted")
+  const [playstate, setPlaystate] = useState("unstarted")
   const [count, setCount] = useState(0)
   const deg = count%360
   const items = data.datasets[0].data
@@ -41,20 +41,19 @@ export default function App() {
   const [winner, setWinner] = useState("")
 
   const handleSpinClick = () => {
-    if(isRotating==="unstarted"||isRotating==="stopped"){
-      setIsRotating("started")
-    }else if(isRotating==="started"){
-      setIsRotating("stopped")
+    if(playstate==="unstarted"||playstate==="stopped"){
+      setPlaystate("started")
+    }else if(playstate==="started"){
+      setPlaystate("stopped")
     }
-    // setIsRotating((prev) => !prev)
-    if(isRotating==="stopped"){
+    if(playstate==="stopped"){
       getWinner(deg,initialAmount);
     }
     // else{
     //   setWinner("")
-    // } 
+    // }
+   
   }
-
   const getWinner = (deg,initialAmount) => {
     let amount=initialAmount
     for (let i = 1; i < items.length+1; i++) {
@@ -66,59 +65,37 @@ export default function App() {
       }
     }
   }
-  console.log(isRotating)
 
-  console.log("deg:",deg, "winner",winner)
 
   useEffect(() => {
-    if(isRotating==="unstarted") return
-    if (isRotating==="started") {
+    if(playstate==="unstarted") return
+    if (playstate==="started") {
       const timer = setInterval(() => {
         setCount((prev) => prev + 1);
       }, 10);
       return () => clearInterval(timer);
-    } else if(isRotating==="stopped"){
-      console.log("실행되나요")
-      while (count<100) {
-        console.log("실행되나요22");
-        const timer2 = setInterval(() => {
-         
-          setCount((prev) => prev - 1);
-        }, 10);
-        return () => clearInterval(timer2);
-      }
-    }
-  }, [isRotating]);
+    } 
+  }, [playstate]);
 
-  console.log(count,"count",deg,"deg",winner,"winner")
-
-  // useEffect(() => {
-  //   if (deg > 360) {
-  //     setDeg(prev => prev - 360)
-  //   } else {
-  //     setDeg(prev => prev + 1)
-  //   }
-  // }, [count])
-
-  console.log(isRotating)
-  const renderWinner = (winner)=>{
-
-  }
+console.log("winner:",winner)
 
   return (
     <div style={{width:"1200px", margin:"0 auto"}}>
     <h1 style={{textAlign:"center"}}>여기가 Winner</h1>
     <h1 style={{textAlign:"center"}}>↓</h1>
-      <Wrapper isRotating={isRotating} deg={deg}>
+      <Wrapper playstate={playstate} deg={deg}>
         <Pie data={data} legend={false} />
       </Wrapper>
       <button onClick={handleSpinClick}>클릭</button>
       <h1>Winner is: {winner}</h1>
+  
     </div>
+
+    
 
   );
 }
-const rotationStart = (deg) => keyframes`
+const rotationStart = () => keyframes`
 0%{
   transform: rotate(0deg);
 }
@@ -127,20 +104,38 @@ const rotationStart = (deg) => keyframes`
 }
 `
 const rotationEnd = (deg) => keyframes`
-  0%{
-    transform: rotate(0deg);
-  }
-  100%{
-    transform: rotate(${360-deg}deg);
-  }
+0%{
+  transform: rotate(0deg);
+}
+10%{
+
+}
+20%{
+
+}
+30%{
+
+}
+40%{
+
+}
+50%{
+
+}
+90%{
+
+}
+100%{
+  transform: rotate(${-1080-deg}deg);
+}
 `
 
 const Wrapper = styled.div`
-  margin-top:100px;
-  margin:0 auto;
-  width:50%;
-  height:50%;
-  animation:${(props) => props.isRotating==="started" ? css`${rotationStart(props.deg)} 0.2s linear infinite` : deg && css`${rotationEnd(props.deg)} 2s ease-out`};
-  transform:${(props) => props.deg !== 0 ? `rotate(${360-props.deg}deg)` : ""}
+margin-top:100px;
+margin:0 auto;
+width:50%;
+height:50%;
+animation:${(props) => props.playstate==="started" ? css`${rotationStart(props.deg)} 0.2s linear infinite` :props.deg && css`${rotationEnd(props.deg)} 2s ease-out`};
+transform:${(props) => props.deg !== 0 ? `rotate(${360-props.deg}deg)` : ""}
 `
 
