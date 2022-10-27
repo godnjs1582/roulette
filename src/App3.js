@@ -1,116 +1,152 @@
 
-import React, { PureComponent, useState, useEffect, useRef, createRef} from 'react';
-// import { reforwardRef } from 'react-chartjs-2/dist/utils';
-import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect, useRef } from 'react';
+import { PieChart, Pie, Cell } from 'recharts';
 import styled, { css, keyframes } from "styled-components";
 import centerImg from "./center.png";
 
+/**데이터*/
 const data = [
-  { name: '빨강', value: 40 },
-  { name: '노랑', value: 30 },
-  { name: '파랑', value: 20 },
-  { name: '초록', value: 10 },
+  { name: '딸기', value: 40 },
+  { name: '당근', value: 30 },
+  { name: '수박', value: 20 },
+  { name: '참외', value: 10 },
+  { name: '메론', value: 40 },
+  { name: '게임', value: 40 },
 ];
 
-
-const COLORS = ["black", 'blue'];
-
+/**반복될 컬러 패턴(2개 이상 필요)*/
+const COLORS = ["#ffffff", '#5335FF'];
 const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+/**라베 커스터마이징(FIXME:text rotation 문제) */
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  index,
+}) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   return (
     <>
-    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-      {data[index].name}
-    </text>
-    <text x={x} y={y+20} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
+      <text
+        x={x}
+        y={y}
+        fill={index % 2 === 0 ? "#5335FF" : "white"}
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        fontSize={24}
+        fontWeight={"bold"}
+        // style={{ WebkitTransform: `rotate(${-y+90}deg)`, transformOrigin: `rotate(${y}deg)` }}
+      >
+        {data[index].name}
+      </text>
     </>
-     );
+  );
 };
 
 
 export default function App() {
-
-  const [isRotate, setIsRotate] = useState(false);
+  /**재생상태 stop(멈춤),play(재생),waiting(기다림) */
+  const [playState, setPlayState] = useState("waiting");
+  /**밀리세컨즈, 계속 실행 됨(FIXME:계속 실행하지 않고 해결하는 방법?)*/
   const [count, setCount]=useState(0)
-  const [deg,setDeg]=useState(Math.ceil(count%360))
-  const items = data.map((item)=>item.name);
-  const sum = data.map((item)=>item.value).reduce((a,b)=>a+b,0);
-  const sections=data.map((item)=>item.value*360/sum)
-  const [winnerPriority,setWinnerPriority]=useState(0)
-
- 
-  // let deg =Math.ceil(count % 360);
-
+  /**clicked 시의 answer이 가질 최종 deg */
+  const [deg,setDeg]=useState(0)
+  /**최종 결과값 */
   const [winner, setWinner] = useState("");
+  /**data=>항목들 추출(ex:["딸기","당근","수박","참외"]) */
+  const items = data.map((item)=>item.name);
+  /** data=>value값들의 합(ex:30,20,10,40 일 경우 sum은 100)*/
+  const sum = data.map((item)=>item.value).reduce((a,b)=>a+b,0);
+  /** wrapper rotate degree를 감지하기 위한*/
+  const ref=useRef()
+  /**real dom degree */
+  const [answer,setAnswer]=useState(null);
 
+
+  /**버튼 클릭 이벤트(waiting, play, stop) */
   const handleSpinClick = () => {
-    setIsRotate((prev) => !prev);
+    if(playState==="waiting"){
+      setPlayState("play")
+    }else if(playState==="play"){
+      setPlayState("stop")
+
+    }else if(playState==="stop"){
+      setPlayState("play")
+    }
   };
 
   useEffect(() => {
-    if (isRotate) {
+    if (playState==="play") {
       const timer = setInterval(() => {
-        setCount((prev) => prev + 10); // 속도조절
-        // setDeg(count%360)
+        setDeg((prev) => prev + 10); 
       }, 10);
       return () => clearInterval(timer);
     }
-    else{
-      const timer = setInterval(() => {
-      setDeg(prev=>Math.sin((prev*Math.PI)/2)*100/360)
-      }, 10);
-      return () => clearInterval(timer);
-    }
-  }, [isRotate,deg]);
-console.log(deg)
+  }, [playState]);
 
-function easeInOutQuad(x, t, b, c, d) {
-  if ((t /= d / 2) < 1) {
-      return c / 2 * t * t + b;
-  } else {
-      return -c / 2 * ((--t) * (t - 2) - 1) + b;
-  }
+  useEffect(()=>{
+    const timer1 = setInterval(() => {
+      setCount((prev) => prev + 10); 
+    }, 10);
+    return () => clearInterval(timer1);
+  },[])
+
+  useEffect(()=>{
+    if(deg>=360){
+      setDeg(deg-360)
+    }
+  },[deg])
+
+
+
+
+
+
+
+const getRotationDegrees=(element)=> {
+  const style = window.getComputedStyle(element.current);
+  const transformString = style['-webkit-transform'] || style['-moz-transform'] || style['transform'] ;
+  if (!transformString || transformString === 'none')
+      setAnswer(0);
+  const splits = transformString.split(',');
+  const parenLoc = splits[0].indexOf('(');
+  const a = parseFloat(splits[0].substr(parenLoc+1));
+  const b = parseFloat(splits[1]);
+  const rad = Math.atan2(b, a);
+  let deg = 180 * rad / Math.PI;
+  if (deg < 0) deg += 360;
+  return setAnswer(deg);
 }
 
+
 useEffect(()=>{
-
-  setDeg(Math.ceil(count%360))
-
+  getRotationDegrees(ref)
 },[count])
 
 
 
-  
-
-  // console.log(winner)
-
 
   useEffect(() => {
-    
-
     const getWinner = () => {
+      let degree1=360-answer;
       let amount = 0;
       for (let i = 0; i < items.length; i++) {
         amount = amount + data[i].value; 
-        if (amount / sum > deg / 360) {
+        if (amount / sum > degree1 / 360) {
           setWinner(data[i].name);
-          setWinnerPriority(data[i].value)
           return
         }
       }
       setWinner(data[items.length-1].name);
-      setWinnerPriority(data[items.length-1].value);
-    
     };
-
     getWinner();
-  }, [deg]);
+  }, [answer]);
   
   const onSubmit = (e) => {
     e.preventDefault()
@@ -122,56 +158,36 @@ useEffect(()=>{
         width: "1200px",
         height: "1080px",
         margin: "0 auto",
-        backgroundColor: "grey",
+        background:"#dddddd"
       }}
  
     >
       <h1 style={{ textAlign: "center" }}>여기가 Winner</h1>
-      <Arrow isRotate={isRotate} deg={deg}>
+      <Arrow playState={playState} deg={deg}>
         ↓
       </Arrow>
       <div style={{ position: "relative" }} >
-        <Wrapper isStop={count && !isRotate} deg={deg} sections={sections} >
-          {/* <ResponsiveContainer width="100%" height="100%"> */}
+        <Wrapper isStop={count && playState==="stop"} deg={deg} ref={ref} >
           <PieChart
             width={600}
             height={600}
-          
-            // style={{ border: "1px solid red" }}
           >
             <Pie
-        
               data={data}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
               label={renderCustomizedLabel}
-              outerRadius={300}
-              fill="#8884d8"
-              dataKey="value"
-              startAngle={90}
-              endAngle={-450}
-              
+              {...PIE_OPTIONS} 
             >
-
-              {data.map((entry, index) => {
-
-                <div key={`cell-${index}`} >
+              {data.map((entry, index) => 
                   <Cell
-
+                    key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
                   />
-                </div>
-              }
-
               )}
             </Pie>
           </PieChart>
-          {/* </ResponsiveContainer> */}
         </Wrapper>
         <Img src={centerImg} alt="center" />
       </div>
-
       <button onClick={handleSpinClick}>클릭</button>
       <h1 >Winner is: {winner}</h1 >
       <form onSubmit={onSubmit} >
@@ -184,8 +200,6 @@ useEffect(()=>{
 
 
 const rotationEnd = (deg) => keyframes`
-
-
   100%{
     transform: rotate(${-1080-deg}deg);
   }
@@ -194,7 +208,6 @@ const rotationEnd = (deg) => keyframes`
 const arrowPlayAnimation = () => keyframes`
  0%{
     transform:rotate(0deg);
-
   }
   50%{
     transform:rotate(20deg);
@@ -218,12 +231,15 @@ z-index: 10;
 `
 
 const Wrapper = styled.div`
-  border:1px solid blue;
   margin-top: 100px;
   margin: 0 auto;
   width: 600px;
   height: 600px;
-
+  animation: ${({ isStop, deg }) =>
+  isStop &&
+  css`
+    ${rotationEnd(deg)} 5s ease-out
+  `};
   transform: ${({ deg }) => `rotate(${-deg}deg)`};
 `;
 
@@ -235,8 +251,15 @@ const Img = styled.img`
   z-index: 999;
 `;
 
-// animation: ${({ isStop, deg , sections}) =>
-// isStop &&
-// css`
-//   ${rotationEnd(deg, sections)} 5s ease-out
-// `};
+const PIE_OPTIONS = {
+  labelLine:false,
+  fill:"#8884d8",
+  dataKey:"value",
+  cx:"50%",
+  cy:"50%",
+  outerRadius:300,
+  startAngle:90,
+  endAngle:-450,
+  stroke:false,
+  isAnimationActive:false 
+}
