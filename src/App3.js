@@ -69,18 +69,17 @@ export default function App() {
   const [answer,setAnswer]=useState(null);
 
 
-  /**버튼 클릭 이벤트(waiting, play, stop) */
+  /**버튼 클릭 이벤트(waiting, play, stop)(FIXME:상태값을 두개(boolean값)로 줄여볼 것! */
   const handleSpinClick = () => {
     if(playState==="waiting"){
       setPlayState("play")
     }else if(playState==="play"){
       setPlayState("stop")
-
     }else if(playState==="stop"){
       setPlayState("play")
     }
   };
-
+/**playState가 재생중일 때만 deg값을 일정하게 더해 줌 */
   useEffect(() => {
     if (playState==="play") {
       const timer = setInterval(() => {
@@ -90,25 +89,22 @@ export default function App() {
     }
   }, [playState]);
 
-  useEffect(()=>{
-    const timer1 = setInterval(() => {
-      setCount((prev) => prev + 10); 
-    }, 10);
-    return () => clearInterval(timer1);
-  },[])
-
+/**0<deg<360으로 유지*/
   useEffect(()=>{
     if(deg>=360){
       setDeg(deg-360)
     }
   },[deg])
 
+  /**카운트는 재생 상태 관련없이 항상 특정 시간마다 증가=>real dom을 확인하기 위함*/ 
+  useEffect(()=>{
+    const timer = setInterval(() => {
+      setCount((prev) => prev + 10); 
+    }, 10);
+    return () => clearInterval(timer);
+  },[])
 
-
-
-
-
-
+  
 const getRotationDegrees=(element)=> {
   const style = window.getComputedStyle(element.current);
   const transformString = style['-webkit-transform'] || style['-moz-transform'] || style['transform'] ;
